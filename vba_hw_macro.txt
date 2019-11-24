@@ -1,0 +1,173 @@
+
+Sub stock_market()
+
+'repeat for all worksheets
+
+For Each ws In Worksheets
+
+Dim open_price As Double
+Dim close_price As Double
+Dim total_volumne As Double
+Dim yearly_change As Double
+Dim percent_change As Double
+Dim ticker_display_indx As Integer
+Dim greatest_per_increase As Double
+Dim greatest_per_decrease As Double
+Dim greatest_volume As Double
+Dim r As Range
+Dim per_inc_pos As Integer
+Dim per_dec_pos As Integer
+Dim gt_vol_pos As Integer
+
+
+'Get rowcount for first column
+
+
+LastRow = ws.Cells(Rows.Count, 1).End(xlUp).Row
+
+'static column headings
+
+ws.Range("H1") = "Ticker"
+ws.Range("I1") = "Yearly Change"
+ws.Range("J1") = "Percentage Change"
+ws.Range("K1") = "Total Volume"
+
+ws.Range("M2") = "Greatest Percent Increase"
+ws.Range("M3") = "Greatest Percent Decrease"
+ws.Range("M4") = "Greatest volume"
+
+ws.Range("N1") = "Ticker"
+ws.Range("O1") = "Value"
+
+'Postion to display at individual ticker level
+
+
+ticker_display_indx = 2
+
+
+'start actual process
+
+For i = 2 To LastRow
+
+  If i = 2 Then
+  
+  'capturing open price for first ticker
+    open_price = ws.Cells(i, 3)
+    
+  End If
+  
+  'compare with next cell for ticker changes
+  
+  If ws.Cells(i, 1).Value <> ws.Cells(i + 1, 1).Value Then
+  
+        total_volume = total_volume + ws.Cells(i, 7).Value
+        
+ 'capturing values before calculations
+ 
+        close_price = ws.Cells(i, 6).Value
+        
+        yearly_change = close_price - open_price
+   
+'making sure the yearly_change or open_price not 0 before calculating the percentage to avoid runtime error
+   
+       If yearly_change <> 0 And open_price <> 0 Then
+     
+           percent_change = (yearly_change / open_price)
+       End If
+       
+     
+'yearly change is 0 means percent change is 0
+
+       If yearly_change = 0 Then
+              percent_change = 0
+              
+      
+      End If
+  
+     
+     
+    'Display calculated vlaues in cells
+     
+     ws.Range("H" & ticker_display_indx) = ws.Cells(i, 1).Value
+     ws.Range("I" & ticker_display_indx) = yearly_change
+     ws.Range("J" & ticker_display_indx) = percent_change
+     ws.Range("K" & ticker_display_indx) = total_volume
+     
+    'Store values or intialize total to 0
+    
+    ticker_display_indx = ticker_display_indx + 1
+    total_volume = 0
+    open_price = ws.Cells(i + 1, 3).Value
+  
+  Else
+    total_volume = total_volume + ws.Cells(i, 7).Value
+    
+  
+  End If
+
+  Next i
+
+'reassiging Lastrow value for greatest value calculations for resutls column
+
+LastRow = ws.Cells(Rows.Count, 11).End(xlUp).Row
+
+'conditional formating for +ve and -ve change indication
+For i = 2 To LastRow
+
+    If ws.Cells(i, 9) >= 0 Then
+    
+       ws.Cells(i, 9).Interior.ColorIndex = 4
+    
+    Else
+    
+       ws.Cells(i, 9).Interior.ColorIndex = 3
+    
+    End If
+    
+Next i
+
+'Percentage format for percentage column
+
+For i = 2 To LastRow
+
+ ws.Cells(i, 10).NumberFormat = "0.00%"
+    
+Next i
+
+
+
+greatest_per_increase = Application.WorksheetFunction.Max(ws.Range("J1:J" & LastRow))
+greatest_per_decrease = Application.WorksheetFunction.Min(ws.Range("J1:J" & LastRow))
+greatest_volume = Application.WorksheetFunction.Max(ws.Range("K1:K" & LastRow))
+
+'MsgBox ("Greatest percentage inc " & greatest_per_increase)
+'MsgBox ("Greatest percentage dec " & greatest_per_decrease)
+'MsgBox ("Greatest volume " & greatest_volume)
+
+'display greatest values in cells
+
+ws.Range("O2") = greatest_per_increase
+ws.Cells(2, 15).NumberFormat = "0.00%"
+ws.Range("O3") = greatest_per_decrease
+ws.Cells(3, 15).NumberFormat = "0.00%"
+ws.Range("O4") = greatest_volume
+
+' find the greatest value position to find the ticker value for the display
+
+
+per_inc_pos = WorksheetFunction.Match(ws.Range("O2").Value, ws.Range("J1:J" & LastRow), 0)
+per_dec_pos = WorksheetFunction.Match(ws.Range("O3").Value, ws.Range("J1:J" & LastRow), 0)
+gt_vol_pos = WorksheetFunction.Match(ws.Range("O4").Value, ws.Range("K1:K" & LastRow), 0)
+
+' display ticker information on the postion as calcualted above
+
+ ws.Range("N2").Value = ws.Range("H" & per_inc_pos)
+ ws.Range("N3").Value = ws.Range("H" & per_dec_pos)
+ ws.Range("N4").Value = ws.Range("H" & gt_vol_pos)
+ 
+ Next ws
+ 
+
+
+
+End Sub
